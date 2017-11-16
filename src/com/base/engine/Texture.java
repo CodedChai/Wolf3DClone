@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL30.glGenerateMipmap;
 
 public class Texture {
     private int id;
@@ -36,6 +37,7 @@ public class Texture {
         BufferedImage image;
 
         try {
+
             image = ImageIO.read(new File("./res/textures/" + fileName));
 
             int[] pixels = new int[image.getWidth() * image.getHeight()];
@@ -69,7 +71,7 @@ public class Texture {
             //Setup texture scaling filtering
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
+            glGenerateMipmap(GL_TEXTURE_2D);
             //Send texel data to OpenGL
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, image.getWidth(), image.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
 
