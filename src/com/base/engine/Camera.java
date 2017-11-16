@@ -51,8 +51,6 @@ public class Camera {
         if(Input.getKey(GLFW_KEY_RIGHT)){
             rotateY(rotAmount);
         }
-
-
     }
 
     public void move(Vector3f dir, float amount){
