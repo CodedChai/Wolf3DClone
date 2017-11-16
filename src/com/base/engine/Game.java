@@ -4,12 +4,12 @@ import java.util.ArrayList;
 
 public class Game {
 
-    private Level level;
+    private static Level level;
     private Player player;
 
     public Game(){
         level = new Level("TestLevel.png", "WolfCollection.png");
-        player = new Player(new Vector3f(0,0.56f,0));
+        player = new Player(new Vector3f(10,0.56f,8));
 
         Transform.setProjection(70f, Window.getWidth(), Window.getHeight(), 0.01f, 1000f);
         Transform.setCamera(player.getCamera());
@@ -33,5 +33,9 @@ public class Game {
     public void render(){
         level.render();
         player.render();
+    }
+
+    public static Level getLevel(){
+        return level;
     }
 }

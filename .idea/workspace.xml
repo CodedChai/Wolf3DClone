@@ -2,11 +2,13 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="2d54a736-7a6e-4a3e-9b19-1c8efc0d35b1" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/com/base/engine/Player.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/Coffee/com/base/engine/Game.class" afterPath="$PROJECT_DIR$/out/production/Coffee/com/base/engine/Game.class" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/Coffee/com/base/engine/Level.class" afterPath="$PROJECT_DIR$/out/production/Coffee/com/base/engine/Level.class" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/Coffee/com/base/engine/Player.class" afterPath="$PROJECT_DIR$/out/production/Coffee/com/base/engine/Player.class" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/base/engine/Camera.java" afterPath="$PROJECT_DIR$/src/com/base/engine/Camera.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/base/engine/Game.java" afterPath="$PROJECT_DIR$/src/com/base/engine/Game.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/base/engine/Input.java" afterPath="$PROJECT_DIR$/src/com/base/engine/Input.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/base/engine/Level.java" afterPath="$PROJECT_DIR$/src/com/base/engine/Level.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/base/engine/Player.java" afterPath="$PROJECT_DIR$/src/com/base/engine/Player.java" />
     </list>
     <ignored path="Coffee.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -34,24 +36,20 @@
       <file leaf-file-name="Level.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/com/base/engine/Level.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="0">
-              <caret line="0" column="24" lean-forward="false" selection-start-line="0" selection-start-column="24" selection-end-line="0" selection-end-column="24" />
+            <state relative-caret-position="1165">
+              <caret line="87" column="22" lean-forward="true" selection-start-line="87" selection-start-column="22" selection-end-line="87" selection-end-column="22" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="Player.java" pinned="false" current-in-tab="false">
+      <file leaf-file-name="Player.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/com/base/engine/Player.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="550">
-              <caret line="22" column="36" lean-forward="true" selection-start-line="22" selection-start-column="36" selection-end-line="22" selection-end-column="36" />
+            <state relative-caret-position="225">
+              <caret line="9" column="49" lean-forward="false" selection-start-line="9" selection-start-column="49" selection-end-line="9" selection-end-column="49" />
               <folding>
                 <element signature="imports" expanded="true" />
-                <element signature="e#460#461#0" expanded="true" />
-                <element signature="e#547#548#0" expanded="true" />
-                <element signature="e#2134#2135#0" expanded="true" />
-                <element signature="e#2163#2164#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -60,19 +58,22 @@
       <file leaf-file-name="Input.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/com/base/engine/Input.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1165">
+            <state relative-caret-position="1225">
               <caret line="60" column="37" lean-forward="false" selection-start-line="60" selection-start-column="23" selection-end-line="60" selection-end-column="37" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="Game.java" pinned="false" current-in-tab="true">
+      <file leaf-file-name="Game.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/com/base/engine/Game.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="275">
-              <caret line="11" column="47" lean-forward="false" selection-start-line="11" selection-start-column="47" selection-end-line="11" selection-end-column="47" />
-              <folding />
+            <state relative-caret-position="900">
+              <caret line="36" column="0" lean-forward="true" selection-start-line="36" selection-start-column="0" selection-end-line="36" selection-end-column="0" />
+              <folding>
+                <element signature="e#735#736#0" expanded="true" />
+                <element signature="e#763#764#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -156,11 +157,11 @@
         <option value="$PROJECT_DIR$/src/com/base/engine/Transform.java" />
         <option value="$PROJECT_DIR$/src/com/base/engine/Bitmap.java" />
         <option value="$PROJECT_DIR$/src/com/base/engine/Texture.java" />
-        <option value="$PROJECT_DIR$/src/com/base/engine/Level.java" />
         <option value="$PROJECT_DIR$/src/com/base/engine/Camera.java" />
         <option value="$PROJECT_DIR$/src/com/base/engine/Input.java" />
-        <option value="$PROJECT_DIR$/src/com/base/engine/Player.java" />
         <option value="$PROJECT_DIR$/src/com/base/engine/Game.java" />
+        <option value="$PROJECT_DIR$/src/com/base/engine/Level.java" />
+        <option value="$PROJECT_DIR$/src/com/base/engine/Player.java" />
       </list>
     </option>
   </component>
@@ -196,8 +197,8 @@
     <panes>
       <pane id="PackagesPane" />
       <pane id="AndroidView" />
-      <pane id="Scope" />
       <pane id="Scratches" />
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -602,6 +603,51 @@
     <entry file="file://$PROJECT_DIR$/src/com/base/engine/Level.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
+          <caret line="0" column="24" lean-forward="false" selection-start-line="0" selection-start-column="24" selection-end-line="0" selection-end-column="24" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/base/engine/Player.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="475">
+          <caret line="22" column="36" lean-forward="true" selection-start-line="22" selection-start-column="36" selection-end-line="22" selection-end-column="36" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/base/engine/Input.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1225">
+          <caret line="60" column="37" lean-forward="false" selection-start-line="60" selection-start-column="23" selection-end-line="60" selection-end-column="37" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/base/engine/Camera.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1275">
+          <caret line="53" column="0" lean-forward="false" selection-start-line="53" selection-start-column="0" selection-end-line="53" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/base/engine/Game.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="275">
+          <caret line="11" column="47" lean-forward="false" selection-start-line="11" selection-start-column="47" selection-end-line="11" selection-end-column="47" />
+          <folding>
+            <element signature="e#735#736#0" expanded="true" />
+            <element signature="e#763#764#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/base/engine/Level.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding />
         </state>
@@ -615,41 +661,40 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/com/base/engine/Level.java">
+    <entry file="file://$PROJECT_DIR$/src/com/base/engine/Input.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="24" lean-forward="false" selection-start-line="0" selection-start-column="24" selection-end-line="0" selection-end-column="24" />
+        <state relative-caret-position="1225">
+          <caret line="60" column="37" lean-forward="false" selection-start-line="60" selection-start-column="23" selection-end-line="60" selection-end-column="37" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/com/base/engine/Input.java">
+    <entry file="file://$PROJECT_DIR$/src/com/base/engine/Game.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="900">
+          <caret line="36" column="0" lean-forward="true" selection-start-line="36" selection-start-column="0" selection-end-line="36" selection-end-column="0" />
+          <folding>
+            <element signature="e#735#736#0" expanded="true" />
+            <element signature="e#763#764#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/base/engine/Level.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1165">
-          <caret line="60" column="37" lean-forward="false" selection-start-line="60" selection-start-column="23" selection-end-line="60" selection-end-column="37" />
+          <caret line="87" column="22" lean-forward="true" selection-start-line="87" selection-start-column="22" selection-end-line="87" selection-end-column="22" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/com/base/engine/Player.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="550">
-          <caret line="22" column="36" lean-forward="true" selection-start-line="22" selection-start-column="36" selection-end-line="22" selection-end-column="36" />
+        <state relative-caret-position="225">
+          <caret line="9" column="49" lean-forward="false" selection-start-line="9" selection-start-column="49" selection-end-line="9" selection-end-column="49" />
           <folding>
             <element signature="imports" expanded="true" />
-            <element signature="e#460#461#0" expanded="true" />
-            <element signature="e#547#548#0" expanded="true" />
-            <element signature="e#2134#2135#0" expanded="true" />
-            <element signature="e#2163#2164#0" expanded="true" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/com/base/engine/Game.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="275">
-          <caret line="11" column="47" lean-forward="false" selection-start-line="11" selection-start-column="47" selection-end-line="11" selection-end-column="47" />
-          <folding />
         </state>
       </provider>
     </entry>
