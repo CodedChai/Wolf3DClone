@@ -5,7 +5,7 @@ import java.util.ArrayList;
 public class Game {
 
     private static Level level;
-    private Player player;
+    private static Player player;
 
     public Game(){
         level = new Level("TestLevel.png", "WolfCollection.png");
@@ -33,6 +33,10 @@ public class Game {
     public void render(){
         level.render();
         player.render();
+    }
+
+    public static Player getPlayer(){
+        return player;
     }
 
     public static Level getLevel(){

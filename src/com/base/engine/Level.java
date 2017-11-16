@@ -17,12 +17,21 @@ public class Level {
     private Material material;
     private Transform transform;
 
+    SpotLight sLight1 = new SpotLight(new PointLight(new BaseLight(new Vector3f(0f, 1f, 1f), 0.8f),
+            new Attenuation(0,0,0.1f), new Vector3f(-2f, 0f, 5f),30f),
+            new Vector3f(1,1,1), 0.7f);
+
     public Level(String levelName, String textureName){
         level = new Bitmap(levelName).flipY();
         material = new Material(new Texture(textureName));
         transform = new Transform();
 
-        shader = BasicShader.getInstance();
+        shader = PhongShader.getInstance();
+
+        PhongShader.setAmbientLight(new Vector3f(0.8f, 0.8f, 0.8f));
+        PhongShader.setDirectionalLight(new DirectionalLight(new BaseLight(new Vector3f(1,1,1), 0.8f), new Vector3f(1f,-11,1)));
+
+        PhongShader.setSpotLight(new SpotLight[]{sLight1});
 
         generateLevel();
     }
@@ -32,7 +41,8 @@ public class Level {
     }
 
     public void update(){
-
+        sLight1.getPointLight().setPosition(Game.getPlayer().getCamera().getPos());
+        sLight1.setDirection(Game.getPlayer().getCamera().getForward());
     }
 
     public void render(){
