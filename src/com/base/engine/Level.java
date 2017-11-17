@@ -17,6 +17,8 @@ public class Level {
     private Material material;
     private Transform transform;
 
+    private Door door;
+
     SpotLight sLight1 = new SpotLight(new PointLight(new BaseLight(new Vector3f(0f, 1f, 1f), 0.8f),
             new Attenuation(0,0,0.1f), new Vector3f(-2f, 0f, 5f),30f),
             new Vector3f(1,1,1), 0.7f);
@@ -34,6 +36,10 @@ public class Level {
         PhongShader.setSpotLight(new SpotLight[]{sLight1});
 
         generateLevel();
+
+        Transform tempTrans = new Transform();
+        tempTrans.setTranslation(new Vector3f(10,0,7));
+        door = new Door(tempTrans, material);
     }
 
     public void input(){
@@ -41,6 +47,9 @@ public class Level {
     }
 
     public void update(){
+
+        door.update();
+
         sLight1.getPointLight().setPosition(Game.getPlayer().getCamera().getPos());
         sLight1.setDirection(Game.getPlayer().getCamera().getForward());
     }
@@ -50,6 +59,7 @@ public class Level {
         shader.updateUniforms(transform.getTransformation(), transform.getProjectedTransformation(), material);
         mesh.draw();
         shader.unbind();
+        door.render();
     }
 
 
@@ -71,6 +81,8 @@ public class Level {
                     }
                 }
             }
+
+            collisionVector = collisionVector.mul(rectCollide(oldPos2, newPos2, objectSize, door.getTransform().getTranslation().getXZ(), new Vector2f(Door.LENGTH, Door.WIDTH)));
         }
 
         return new Vector3f(collisionVector.getX(), 0, collisionVector.getY());
@@ -212,5 +224,9 @@ public class Level {
         indices.toArray(intArray);
 
         mesh = new Mesh(vertArray, Util.toIntArray(intArray));
+    }
+
+    public Shader getShader(){
+        return shader;
     }
 }
