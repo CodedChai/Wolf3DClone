@@ -21,13 +21,13 @@ public class Level {
     private Material material;
     private Transform transform;
     private Player player;
-
-    //private Door door;
     private ArrayList<Door> doors;
-
-    SpotLight sLight1 = new SpotLight(new PointLight(new BaseLight(new Vector3f(0f, 1f, 1f), 0.8f),
+    private SpotLight sLight1 = new SpotLight(new PointLight(new BaseLight(new Vector3f(0f, 1f, 1f), 0.8f),
             new Attenuation(0,0,0.1f), new Vector3f(-2f, 0f, 5f),30f),
             new Vector3f(1,1,1), 0.7f);
+
+    private Monster monster;
+
 
     public Level(String levelName, String textureName, Player player){
         this.player = player;
@@ -46,6 +46,7 @@ public class Level {
         generateLevel();
 
         Transform tempTrans = new Transform();
+        monster = new Monster(tempTrans);
         tempTrans.setTranslation(new Vector3f(10,0,7));
 
     }
@@ -66,12 +67,14 @@ public class Level {
         for(Door door : doors)
             door.update();
 
+        monster.update();
         sLight1.getPointLight().setPosition(player.getCamera().getPos());
         sLight1.setDirection(player.getCamera().getForward());
     }
 
     public void render(){
         player.render();
+        monster.render();
         shader.bind();
         shader.updateUniforms(transform.getTransformation(), transform.getProjectedTransformation(), material);
         mesh.draw();
@@ -99,7 +102,6 @@ public class Level {
                     }
                 }
             }
-            //TODO: Take into account doors orientation
             Vector2f doorSize;
             for (Door door : doors) {
                 doorSize = door.getDoorSize();
