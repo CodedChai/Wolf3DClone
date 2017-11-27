@@ -12,12 +12,21 @@ public class Monster {
     public static final float TEX_MIN_X = 0;
     public static final float TEX_MIN_Y = 0;
 
+    public static final int STATE_IDLE = 0;
+    public static final int STATE_CHASE = 1;
+    public static final int STATE_ATTACK = 2;
+    public static final int STATE_DYING = 3;
+    public static final int STATE_DEAD = 4;
+
+
     private Mesh mesh;
     private Material material;
     private Transform transform;
+    private int state;
 
     public Monster(Transform transform){
         this.transform = transform;
+        this.state = STATE_IDLE;
         material = new Material(new Texture("SSWVA1.png"));
 
         if(mesh == null){
@@ -36,8 +45,57 @@ public class Monster {
         }
     }
 
-    public void update(){
+    private void idleUpdate(){
 
+    }
+
+    private void chaseUpdate(){
+
+    }
+
+    private void attackUpdate(){
+
+    }
+
+    private void dyingUpdate(){
+
+    }
+
+    private void deadUpdate(){
+
+    }
+
+    private void billboard(){
+        Vector3f directionToCam = transform.getTranslation().sub(Transform.getCamera().getPos());
+
+        float angleToFaceCamera = (float)Math.toDegrees(Math.atan(directionToCam.getZ()/directionToCam.getX()));
+
+        if(directionToCam.getX() > 0)
+            angleToFaceCamera += 180.0f;
+
+        transform.getRotation().setY(angleToFaceCamera + 90.0f);
+    }
+
+    public void update(){
+        billboard();
+
+        switch (state){
+            case STATE_IDLE:
+                idleUpdate();
+                break;
+            case STATE_CHASE:
+                chaseUpdate();
+                break;
+            case STATE_ATTACK:
+                attackUpdate();
+                break;
+            case STATE_DYING:
+                dyingUpdate();
+                break;
+            case STATE_DEAD:
+                deadUpdate();
+                break;
+        }
     }
 
     public void render(){
