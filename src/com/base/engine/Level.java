@@ -17,7 +17,8 @@ public class Level {
     private Material material;
     private Transform transform;
 
-    private Door door;
+    //private Door door;
+    private ArrayList<Door> doors;
 
     SpotLight sLight1 = new SpotLight(new PointLight(new BaseLight(new Vector3f(0f, 1f, 1f), 0.8f),
             new Attenuation(0,0,0.1f), new Vector3f(-2f, 0f, 5f),30f),
@@ -29,7 +30,8 @@ public class Level {
         transform = new Transform();
 
         shader = PhongShader.getInstance();
-
+        //door = new Door(tempTrans, material);
+        doors = new ArrayList<Door>();
         PhongShader.setAmbientLight(new Vector3f(0.8f, 0.8f, 0.8f));
         PhongShader.setDirectionalLight(new DirectionalLight(new BaseLight(new Vector3f(1,1,1), 0.8f), new Vector3f(1f,-11,1)));
 
@@ -39,7 +41,7 @@ public class Level {
 
         Transform tempTrans = new Transform();
         tempTrans.setTranslation(new Vector3f(10,0,7));
-        door = new Door(tempTrans, material);
+
     }
 
     public void input(){
@@ -47,8 +49,8 @@ public class Level {
     }
 
     public void update(){
-
-        door.update();
+        for(Door door : doors)
+            door.update();
 
         sLight1.getPointLight().setPosition(Game.getPlayer().getCamera().getPos());
         sLight1.setDirection(Game.getPlayer().getCamera().getForward());
@@ -59,7 +61,8 @@ public class Level {
         shader.updateUniforms(transform.getTransformation(), transform.getProjectedTransformation(), material);
         mesh.draw();
         shader.unbind();
-        door.render();
+        for(Door door : doors)
+            door.render();
     }
 
 
@@ -82,7 +85,7 @@ public class Level {
                 }
             }
 
-            collisionVector = collisionVector.mul(rectCollide(oldPos2, newPos2, objectSize, door.getTransform().getTranslation().getXZ(), new Vector2f(Door.LENGTH, Door.WIDTH)));
+           // collisionVector = collisionVector.mul(rectCollide(oldPos2, newPos2, objectSize, door.getTransform().getTranslation().getXZ(), new Vector2f(Door.LENGTH, Door.WIDTH)));
         }
 
         return new Vector3f(collisionVector.getX(), 0, collisionVector.getY());
@@ -171,6 +174,34 @@ public class Level {
 
     }
 
+    private void addDoor(int x, int y){
+        Transform doorTransform = new Transform();
+
+        boolean xDoor = ((level.getPixel(x, y-1) & 0xFFFFFF) == 0) && ((level.getPixel(x, y+1) & 0xFFFFFF) == 0);
+        boolean yDoor = ((level.getPixel(x-1, y) & 0xFFFFFF) == 0) && ((level.getPixel(x+1, y) & 0xFFFFFF) == 0);
+
+        if(!(xDoor ^ yDoor)){
+            System.err.println("Level generation failed due to invalid door placement at " + x + " " + y+".");
+            new Exception().printStackTrace();
+            System.exit(1);
+        }
+        if(yDoor){
+            doorTransform.setTranslation(x, 0, y + (SPOT_LENGTH / 2));
+        }
+        if(xDoor){
+            doorTransform.setTranslation(x + (SPOT_WIDTH / 2), 0, y);
+            doorTransform.setRotation(0, 90, 0);
+        }
+
+        doors.add(new Door(doorTransform, material));
+    }
+
+    private void addSpecial(int blueVal, int x, int y){
+        if(blueVal == 16){
+            addDoor(x, y);
+        }
+    }
+
     private void generateLevel(){
         ArrayList<Vertex> vertices = new ArrayList<Vertex>();
         ArrayList<Integer> indices = new ArrayList<Integer>();
@@ -183,6 +214,8 @@ public class Level {
                 }
 
                 float[] texCoords = calcTexCoords((level.getPixel(i,j) & 0x00FF00) >> 8);
+
+                addSpecial(level.getPixel(i,j) & 0x0000FF, i, j);
 
                 // Generate Floor
                 addFace(indices, vertices.size(), true);
