@@ -5,14 +5,29 @@ public class Door {
     public static final float HEIGHT = 1;
     public static final float WIDTH = 0.125f;
     public static final float START = 0;
+    public static final double TIME_TO_OPEN = 0.5;
+    public static final double CLOSE_DELAY = 1.0;
+
 
     private static Mesh mesh;
     private Material material;
     private Transform transform;
 
-    public Door(Transform transform, Material material){
+    private Vector3f openPosition;
+    private Vector3f closePosition;
+
+    private boolean isOpening;
+    private double openingStartTime;
+    private double closingStartTime;
+    private double openTime;
+    private double closeTime;
+
+    public Door(Transform transform, Material material, Vector3f openPosition){
+        this.isOpening = false;
         this.transform = transform;
         this.material = material;
+        this.closePosition = transform.getTranslation().mul(1);
+        this.openPosition = openPosition;
         if(mesh == null){
             // TODO: Add top/bottom face if you set height less than level height
             Vertex[] vertices = new Vertex[]{new Vertex(new Vector3f(START,START,START), new Vector2f(0.5f,1)),
@@ -54,8 +69,34 @@ public class Door {
         }
     }
 
-    public void update(){
+    private Vector3f vectorLerp(Vector3f startPos, Vector3f endPos, float lerpFactor){
+        return startPos.add(endPos.sub(startPos).mul(lerpFactor));
+    }
 
+
+    public void update(){
+        if(isOpening){
+            doorOpening();
+        }
+    }
+
+    private void doorOpening(){
+        double time = (double)Time.getTime()/(double)Time.SECOND;
+        if(time < openTime){
+            getTransform().setTranslation(vectorLerp(closePosition, openPosition,
+                                                        (float)((time - openingStartTime) / TIME_TO_OPEN)));
+        }
+        else if(time < closingStartTime){
+            getTransform().setTranslation(openPosition);
+        }
+        else if(time < closeTime){
+            getTransform().setTranslation(vectorLerp(openPosition, closePosition,
+                                                        (float)((time - closingStartTime) / TIME_TO_OPEN)));
+        }
+        else {
+            getTransform().setTranslation(closePosition);
+            isOpening = false;
+        }
     }
 
     public void render(){
@@ -70,5 +111,23 @@ public class Door {
 
     public Transform getTransform(){
         return transform;
+    }
+
+    public void open(){
+        if(isOpening)
+            return;
+
+        openingStartTime = (double)Time.getTime()/(double)Time.SECOND;
+        openTime = openingStartTime + TIME_TO_OPEN;
+        closingStartTime = openTime + CLOSE_DELAY;
+        closeTime = closingStartTime + TIME_TO_OPEN;
+        isOpening = true;
+    }
+
+    public Vector2f getDoorSize() {
+        if(getTransform().getRotation().getY() == 90)
+            return new Vector2f(Door.WIDTH, Door.LENGTH);
+        else
+            return new Vector2f(Door.LENGTH, Door.WIDTH);
     }
 }
