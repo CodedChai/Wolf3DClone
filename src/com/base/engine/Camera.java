@@ -70,8 +70,6 @@ public class Camera {
         up = forward.cross(haxis).normalize();
         up = up.normalize();
 
-        System.out.println(up.toString());
-
     }
 
     // Tilting up and down
@@ -81,7 +79,6 @@ public class Camera {
         //System.out.println(haxis.toString());
         Vector3f t = forward.rotate(angle, haxis);
         forward = forward.add(t);
-        System.out.println(forward.toString());
 
         forward = forward.normalize();
 

@@ -1,5 +1,7 @@
 package com.base.engine;
 
+import java.util.Random;
+
 public class Monster {
     public static final float SCALE = 0.7f;
 
@@ -18,15 +20,31 @@ public class Monster {
     public static final int STATE_DYING = 3;
     public static final int STATE_DEAD = 4;
 
+    public static final float MOVE_SPEED = 1;
+    public static final float MOVEMENT_STOP_DISTANCE = 1.5f;
+    public static final float MONSTER_WIDTH = 0.2f;
+    public static final float MONSTER_LENGTH = 0.2f;
+    public static final float SHOOT_DISTANCE = 1000.0f;
+    public static final float SHOT_ANGLE = 10.0f;
+    public static final float ATTACK_CHANCE = 0.05f;
+    public static final int MAX_HEALTH = 100;
 
     private Mesh mesh;
     private Material material;
     private Transform transform;
+    private Random rand;
     private int state;
+    private boolean canLook;
+    private boolean canAttack;
+    private int health;
 
     public Monster(Transform transform){
         this.transform = transform;
         this.state = STATE_IDLE;
+        this.canLook = false;
+        this.canAttack = false;
+        this.health = MAX_HEALTH;
+        this.rand = new Random();
         material = new Material(new Texture("SSWVA1.png"));
 
         if(mesh == null){
@@ -44,58 +62,151 @@ public class Monster {
             mesh = new Mesh(vertices, indices);
         }
     }
+    public void damage(int amount){
+        if(state == STATE_IDLE){
+            state = STATE_CHASE;
+        }
 
-    private void idleUpdate(){
+        health -= amount;
+
+        if(health <= 0){
+            state = STATE_DYING;
+        }
+    }
+
+    private void idleUpdate(Vector3f orientation, float distance){
+        double time = Time.getTime()/(double)Time.SECOND;
+        double timeDecimals = time - (double)((int)time);
+
+        if(timeDecimals < 0.5){
+            canLook = true;
+        }
+        else if(canLook){
+            Vector2f lineStart = transform.getTranslation().getXZ();
+            Vector2f castDirection = orientation.getXZ();
+            Vector2f lineEnd = lineStart.add(castDirection.mul(SHOOT_DISTANCE));
+
+            Vector2f collisionVector = Game.getLevel().checkIntersections(lineStart, lineEnd);
+
+            Vector2f playerIntersectVector = Game.getLevel().lineIntersectRect(lineStart, lineEnd, Transform.getCamera().getPos().getXZ(), new Vector2f(Player.PLAYER_SIZE, Player.PLAYER_SIZE));
+
+            if(playerIntersectVector != null &&
+                    (collisionVector == null ||
+                            playerIntersectVector.sub(lineStart).length() < collisionVector.sub(lineStart).length())){
+                System.out.println("Seen player");
+                state = STATE_CHASE;
+            }
+
+            canLook = false;
+        }
 
     }
 
-    private void chaseUpdate(){
+    private void chaseUpdate(Vector3f orientation, float distance){
+        if(rand.nextDouble() < ATTACK_CHANCE * Time.getDelta()){
+            state = STATE_ATTACK;
+        }
 
+        if(distance > MOVEMENT_STOP_DISTANCE){
+            float moveAmount = MOVE_SPEED * (float)Time.getDelta();
+            Vector3f oldPos = transform.getTranslation();
+            Vector3f newPos = transform.getTranslation().add(orientation.mul(moveAmount));
+
+            Vector3f collisionVector = Game.getLevel().checkCollision(oldPos, newPos, MONSTER_WIDTH, MONSTER_LENGTH);
+
+            Vector3f movementVector = collisionVector.mul(orientation);
+
+            if(movementVector.sub(orientation).length() != 0)
+                Game.getLevel().openDoors(transform.getTranslation());
+            if(movementVector.length() > 0)
+                transform.setTranslation(transform.getTranslation().add(movementVector.mul(moveAmount)));
+        } else {
+            state = STATE_ATTACK;
+        }
     }
 
-    private void attackUpdate(){
+    private void attackUpdate(Vector3f orientation, float distance){
+        double time = Time.getTime()/(double)Time.SECOND;
+        double timeDecimals = time - (double)((int)time);
 
+        if(timeDecimals < 0.3){
+            canAttack = true;
+        }
+        else if (canAttack) {
+            Vector2f lineStart = transform.getTranslation().getXZ();
+            Vector2f castDirection = orientation.getXZ().rotate((rand.nextFloat() - 0.5f) * SHOT_ANGLE);
+            Vector2f lineEnd = lineStart.add(castDirection.mul(SHOOT_DISTANCE));
+
+            Vector2f collisionVector = Game.getLevel().checkIntersections(lineStart, lineEnd);
+
+            Vector2f playerIntersectVector = Game.getLevel().lineIntersectRect(lineStart, lineEnd, Transform.getCamera().getPos().getXZ(), new Vector2f(Player.PLAYER_SIZE, Player.PLAYER_SIZE));
+
+            if (playerIntersectVector != null &&
+                    (collisionVector == null ||
+                            playerIntersectVector.sub(lineStart).length() < collisionVector.sub(lineStart).length())) {
+                System.out.println("Hit player");
+            }
+
+            if (collisionVector == null) {
+                System.out.println("Missed");
+            } else {
+                System.out.println("Hit");
+            }
+
+            state = STATE_CHASE;
+            canAttack = false;
+        }
     }
 
-    private void dyingUpdate(){
-
+    private void dyingUpdate(Vector3f orientation, float distance){
+        state = STATE_DEAD;
     }
 
-    private void deadUpdate(){
-
+    private void deadUpdate(Vector3f orientation, float distance){
+        System.out.println("DEAD");
+        // Eventually dead sprite
     }
 
-    private void billboard(){
-        Vector3f directionToCam = transform.getTranslation().sub(Transform.getCamera().getPos());
+    private void alignWithGround(){
+        transform.setTranslation(transform.getTranslation().getX(), 0.0f, transform.getTranslation().getZ());
+    }
+
+    private void billboard(Vector3f directionToCam){
 
         float angleToFaceCamera = (float)Math.toDegrees(Math.atan(directionToCam.getZ()/directionToCam.getX()));
 
-        if(directionToCam.getX() > 0)
+        if(directionToCam.getX() < 0)
             angleToFaceCamera += 180.0f;
 
         transform.getRotation().setY(angleToFaceCamera + 90.0f);
     }
 
     public void update(){
-        billboard();
+        Vector3f directionToCam = Transform.getCamera().getPos().sub(transform.getTranslation());
+        float distance = directionToCam.length();
+        Vector3f orientation = directionToCam.div(distance);
+
+        billboard(orientation);
 
         switch (state){
             case STATE_IDLE:
-                idleUpdate();
+                idleUpdate(orientation, distance);
                 break;
             case STATE_CHASE:
-                chaseUpdate();
+                chaseUpdate(orientation, distance);
                 break;
             case STATE_ATTACK:
-                attackUpdate();
+                attackUpdate(orientation, distance);
                 break;
             case STATE_DYING:
-                dyingUpdate();
+                dyingUpdate(orientation, distance);
                 break;
             case STATE_DEAD:
-                deadUpdate();
+                deadUpdate(orientation, distance);
                 break;
         }
+
+        alignWithGround();
     }
 
     public void render(){

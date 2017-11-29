@@ -22,6 +22,8 @@ public class Level {
     private Transform transform;
     private Player player;
     private ArrayList<Door> doors;
+    private ArrayList<Vector2f> collisionPosStart;
+    private ArrayList<Vector2f> collisionPosEnd;
 
     private Monster monster;
 
@@ -36,20 +38,28 @@ public class Level {
         //door = new Door(tempTrans, material);
         doors = new ArrayList<Door>();
 
-        generateLevel();
+        collisionPosStart = new ArrayList<Vector2f>();
+        collisionPosEnd = new ArrayList<Vector2f>();
         Transform tempTrans = new Transform();
-        monster = new Monster(tempTrans);
         tempTrans.setTranslation(new Vector3f(10,0,7));
+        monster = new Monster(tempTrans);
+        generateLevel();
 
+
+    }
+
+    public void openDoors(Vector3f position){
+        for(Door door : doors){
+            if(door.getTransform().getTranslation().sub(position).length() < OPEN_DISTANCE){
+                door.open();
+            }
+        }
     }
 
     public void input(){
         if(Input.getKey(GLFW_KEY_E)){
-            for(Door door : doors){
-                if(door.getTransform().getTranslation().sub(player.getCamera().getPos()).length() < OPEN_DISTANCE){
-                    door.open();
-                }
-            }
+          openDoors(player.getCamera().getPos());
+          monster.damage(50);
         }
         player.input();
     }
@@ -74,6 +84,75 @@ public class Level {
         monster.render();
     }
 
+    public Vector2f checkIntersections(Vector2f lineStart, Vector2f lineEnd){
+        Vector2f nearestIntersection = null;
+
+        for (int i = 0; i < collisionPosStart.size(); i++){
+            Vector2f collisionVector = lineIntersect(lineStart, lineEnd, collisionPosStart.get(i), collisionPosEnd.get(i));
+
+            nearestIntersection = findNearestVector2f(nearestIntersection, collisionVector, lineStart);
+
+        }
+
+        for(Door door : doors){
+            Vector2f collisionVector = lineIntersectRect(lineStart, lineEnd,door.getTransform().getTranslation().getXZ(), door.getDoorSize());
+
+            nearestIntersection = findNearestVector2f(nearestIntersection, collisionVector, lineStart);
+
+        }
+
+        return nearestIntersection;
+    }
+
+    private float Vector2fCross(Vector2f a, Vector2f b){
+        return a.getX() * b.getY() - a.getY() * b.getX();
+    }
+
+    private Vector2f lineIntersect(Vector2f lineStart1, Vector2f lineEnd1, Vector2f lineStart2, Vector2f lineEnd2){
+        Vector2f line1 = lineEnd1.sub(lineStart1);
+        Vector2f line2 = lineEnd2.sub(lineStart2);
+
+        float cross = Vector2fCross(line1, line2);
+
+        if(cross == 0)
+            return null;
+
+        Vector2f lineStartDistance = lineStart2.sub(lineStart1);
+
+        float a = Vector2fCross(lineStartDistance, line2)/cross;
+        float b = Vector2fCross(lineStartDistance, line1)/cross;
+
+        if(0.0f < a && a < 1.0f && 0.0f < b && b < 1.0f)
+            return lineStart1.add(line1.mul(a));
+
+        return null;
+    }
+
+    private Vector2f findNearestVector2f(Vector2f a, Vector2f b, Vector2f posRelative){
+        if(b != null && (a == null ||
+                a.sub(posRelative).length() > b.sub(posRelative).length())){
+            return b;
+        }
+        return a;
+    }
+
+    public Vector2f lineIntersectRect(Vector2f lineStart, Vector2f lineEnd, Vector2f rectPos, Vector2f rectSize){
+        Vector2f result = null;
+
+        Vector2f collisionVector = lineIntersect(lineStart, lineEnd, rectPos, new Vector2f(rectPos.getX() + rectSize.getX(), rectPos.getY()));
+        result = findNearestVector2f(result, collisionVector, lineStart);
+
+        collisionVector = lineIntersect(lineStart, lineEnd, rectPos, new Vector2f(rectPos.getX(), rectPos.getY() + rectSize.getY()));
+        result = findNearestVector2f(result, collisionVector, lineStart);
+
+        collisionVector = lineIntersect(lineStart, lineEnd, new Vector2f(rectPos.getX(), rectPos.getY() + rectSize.getY()), new Vector2f(rectPos.getX() + rectSize.getX(), rectPos.getY() + rectSize.getY()));
+        result = findNearestVector2f(result, collisionVector, lineStart);
+
+        collisionVector = lineIntersect(lineStart, lineEnd, new Vector2f(rectPos.getX() + rectSize.getX(), rectPos.getY()), new Vector2f(rectPos.getX() + rectSize.getX(), rectPos.getY() + rectSize.getY()));
+        result = findNearestVector2f(result, collisionVector, lineStart);
+
+        return result;
+    }
 
     public Vector3f checkCollision(Vector3f oldPos, Vector3f newPos, float objectWidth, float objectLength){
         Vector2f collisionVector = new Vector2f(1,1);
@@ -247,20 +326,32 @@ public class Level {
                 texCoords = calcTexCoords((level.getPixel(i,j) & 0xFF0000) >> 16);
 
                 if((level.getPixel(i,j - 1) & 0xFFFFFF) == 0){
+                    collisionPosStart.add(new Vector2f(i * SPOT_WIDTH, j * SPOT_LENGTH));
+                    collisionPosEnd.add(new Vector2f((i+1) * SPOT_WIDTH, j * SPOT_LENGTH));
+
                     addFace(indices, vertices.size(), false);
                     addVertices(vertices, i, 0, j, true, true, false, texCoords);
                 }
                 if((level.getPixel(i,j + 1) & 0xFFFFFF) == 0){
+                    collisionPosStart.add(new Vector2f(i * SPOT_WIDTH, (j + 1) * SPOT_LENGTH));
+                    collisionPosEnd.add(new Vector2f((i+1) * SPOT_WIDTH, (j + 1) * SPOT_LENGTH));
+
                     addFace(indices, vertices.size(), true);
                     addVertices(vertices, i, 0, j + 1, true, true, false, texCoords);
 
                 }
                 if((level.getPixel(i - 1,j) & 0xFFFFFF) == 0){
+                    collisionPosStart.add(new Vector2f(i * SPOT_WIDTH, j * SPOT_LENGTH));
+                    collisionPosEnd.add(new Vector2f(i * SPOT_WIDTH, (j + 1) * SPOT_LENGTH));
+
                     addFace(indices, vertices.size(), true);
                     addVertices(vertices, 0, j, i, false, true, true, texCoords);
 
                 }
                 if((level.getPixel(i + 1,j) & 0xFFFFFF) == 0){
+                    collisionPosStart.add(new Vector2f((i+1) * SPOT_WIDTH, j * SPOT_LENGTH));
+                    collisionPosEnd.add(new Vector2f((i+1) * SPOT_WIDTH, (j + 1) * SPOT_LENGTH));
+
                     addFace(indices, vertices.size(), false);
                     addVertices(vertices, 0, j, i + 1, false, true, true, texCoords);
 

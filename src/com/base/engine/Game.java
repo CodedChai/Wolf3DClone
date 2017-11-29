@@ -8,7 +8,7 @@ public class Game {
     //private static Player player;
 
     public Game(){
-        Player player = new Player(new Vector3f(10,0.56f,8));
+        Player player = new Player(new Vector3f(10,0.4f,8));
         level = new Level("TestLevel.png", "WolfCollection.png", player);
 
         Transform.setProjection(70f, Window.getWidth(), Window.getHeight(), 0.01f, 1000f);
