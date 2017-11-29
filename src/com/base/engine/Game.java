@@ -7,14 +7,13 @@ public class Game {
     private static Level level;
     //private static Player player;
     private static boolean isRunning;
+    private static int levelNum = 0;
+
 
     public Game(){
-        Player player = new Player(new Vector3f(10,0.4f,8));
-        level = new Level("TestLevel.png", "WolfCollection.png", player);
+        //Player player = new Player(new Vector3f(10,0.4f,8));
+        loadNextLevel();
 
-        Transform.setProjection(70f, Window.getWidth(), Window.getHeight(), 0.01f, 1000f);
-        Transform.setCamera(player.getCamera());
-        isRunning = true;
     }
 
     public void start(){
@@ -40,6 +39,14 @@ public class Game {
         isRunning = setVal;
     }
 
+    public static void loadNextLevel(){
+        levelNum++;
+        level = new Level("Level"+levelNum+".png", "WolfCollection.png");
+
+        Transform.setProjection(70f, Window.getWidth(), Window.getHeight(), 0.01f, 1000f);
+        Transform.setCamera(level.getPlayer().getCamera());
+        isRunning = true;
+    }
    // public static Player getPlayer(){
      //   return player;
  //   }

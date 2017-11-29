@@ -128,10 +128,8 @@ public class Monster {
 
                 Vector2f collisionVector = Game.getLevel().checkIntersections(lineStart, lineEnd, false);
 
-                Vector2f playerIntersectVector = Game.getLevel().lineIntersectRect(lineStart, lineEnd, Transform.getCamera().getPos().getXZ(), new Vector2f(Player.PLAYER_SIZE, Player.PLAYER_SIZE));
-
-                if(playerIntersectVector != null &&
-                        (collisionVector == null ||
+                Vector2f playerIntersectVector =Transform.getCamera().getPos().getXZ();
+                if((collisionVector == null ||
                                 playerIntersectVector.sub(lineStart).length() < collisionVector.sub(lineStart).length())){
                     System.out.println("Seen player");
                     state = STATE_CHASE;
@@ -140,7 +138,6 @@ public class Monster {
                 canLook = false;
             }
         }
-
     }
 
     private void chaseUpdate(Vector3f orientation, float distance){
@@ -174,7 +171,7 @@ public class Monster {
             Vector3f movementVector = collisionVector.mul(orientation);
 
             if(movementVector.sub(orientation).length() != 0)
-                Game.getLevel().openDoors(transform.getTranslation());
+                Game.getLevel().openDoors(transform.getTranslation(), false);
             if(movementVector.length() > 0)
                 transform.setTranslation(transform.getTranslation().add(movementVector.mul(moveAmount)));
         } else {

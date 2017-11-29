@@ -1,9 +1,10 @@
 package com.base.engine;
 
+import org.lwjglx.Sys;
+
 import java.util.Random;
 
 import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_RIGHT;
 
 public class Player {
     public static final float GUN_OFFSET = -0.0875f;
@@ -25,14 +26,14 @@ public class Player {
     public static final float SHOOT_DISTANCE = 1000.0f;
     public static final int DAMAGE_MIN = 20;
     public static final int DAMAGE_MAX = 60;
-    public static final int MAX_HEALTH = 100;
-    public static final double ATTACK_DELAY = .7;
+    public static final int MAX_HEALTH = 100000;
+    public static final double ATTACK_DELAY = .4;
 
     private static final Vector3f zeroVector = new Vector3f(0,0,0);
     private Random rand;
     private int health;
     private Camera camera;
-    private Vector3f movementVector = zeroVector;
+    private Vector3f movementVector;
     private double lastAttackTime;
     private boolean canAttack;
     private static Mesh mesh;
@@ -61,7 +62,7 @@ public class Player {
         }
         gunTransform = new Transform();
         gunTransform.setTranslation(new Vector3f(10,0,7));
-
+        movementVector = zeroVector;
         rand = new Random();
         health = MAX_HEALTH;
         camera = new Camera(position, new Vector3f(0,0,1), new Vector3f(0,1,0));
@@ -70,10 +71,11 @@ public class Player {
 
     public void damage(int amount){
         health -= amount;
-        System.out.println(health);
 
         if(health > MAX_HEALTH)
             health = MAX_HEALTH;
+
+        System.out.println(health);
 
         if(health <= 0){
             Game.setIsRunning(false);
@@ -121,17 +123,19 @@ public class Player {
         }
 
         if(Input.getKey(GLFW_KEY_E)){
-            Game.getLevel().openDoors(camera.getPos());
+            Game.getLevel().openDoors(camera.getPos(), true);
         }
-
-        handleCanAttack();
+        if(!canAttack)
+            handleCanAttack();
 
         if(Input.getKeyPress(GLFW_KEY_SPACE) && canAttack){
             canAttack = false;
             lastAttackTime = Time.getTime()/(double)Time.SECOND;
 
-            Vector2f lineStart = camera.getPos().getXZ();
-            Vector2f castDirection = camera.getForward().getXZ().normalize();
+            gunMaterial = new Material(new Texture("PISFA0.png"));
+
+            Vector2f lineStart = new Vector2f(camera.getPos().getX(), camera.getPos().getZ());
+            Vector2f castDirection = new Vector2f(camera.getForward().getX(), camera.getForward().getZ()).normalize();
             Vector2f lineEnd = lineStart.add(castDirection.mul(SHOOT_DISTANCE));
 
             Game.getLevel().checkIntersections(lineStart, lineEnd, true);
@@ -142,6 +146,7 @@ public class Player {
         double time = Time.getTime()/(double)Time.SECOND;
 
         if((time - lastAttackTime) > ATTACK_DELAY){
+            gunMaterial = new Material(new Texture("PISGB0.png"));
             canAttack = true;
         }
     }
@@ -173,7 +178,6 @@ public class Player {
             angleToFaceCamera += 180.0f;
 
         gunTransform.getRotation().setY(angleToFaceCamera + 90.0f);
-
     }
 
     public void render(){
@@ -182,6 +186,14 @@ public class Player {
         shader.updateUniforms(gunTransform.getTransformation(), gunTransform.getProjectedTransformation(), gunMaterial);
         mesh.draw();
         shader.unbind();
+    }
+
+    public int getMaxHealth(){
+        return  MAX_HEALTH;
+    }
+
+    public int getHealth(){
+        return health;
     }
 
     public Camera getCamera() {
