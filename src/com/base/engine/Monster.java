@@ -28,6 +28,8 @@ public class Monster {
     public static final float SHOT_ANGLE = 10.0f;
     public static final float ATTACK_CHANCE = 0.05f;
     public static final int MAX_HEALTH = 100;
+    public static final int DAMAGE_MIN = 5;
+    public static final int DAMAGE_MAX = 25;
 
     private Mesh mesh;
     private Material material;
@@ -62,6 +64,7 @@ public class Monster {
             mesh = new Mesh(vertices, indices);
         }
     }
+
     public void damage(int amount){
         if(state == STATE_IDLE){
             state = STATE_CHASE;
@@ -86,7 +89,7 @@ public class Monster {
             Vector2f castDirection = orientation.getXZ();
             Vector2f lineEnd = lineStart.add(castDirection.mul(SHOOT_DISTANCE));
 
-            Vector2f collisionVector = Game.getLevel().checkIntersections(lineStart, lineEnd);
+            Vector2f collisionVector = Game.getLevel().checkIntersections(lineStart, lineEnd, false);
 
             Vector2f playerIntersectVector = Game.getLevel().lineIntersectRect(lineStart, lineEnd, Transform.getCamera().getPos().getXZ(), new Vector2f(Player.PLAYER_SIZE, Player.PLAYER_SIZE));
 
@@ -137,7 +140,7 @@ public class Monster {
             Vector2f castDirection = orientation.getXZ().rotate((rand.nextFloat() - 0.5f) * SHOT_ANGLE);
             Vector2f lineEnd = lineStart.add(castDirection.mul(SHOOT_DISTANCE));
 
-            Vector2f collisionVector = Game.getLevel().checkIntersections(lineStart, lineEnd);
+            Vector2f collisionVector = Game.getLevel().checkIntersections(lineStart, lineEnd, false);
 
             Vector2f playerIntersectVector = Game.getLevel().lineIntersectRect(lineStart, lineEnd, Transform.getCamera().getPos().getXZ(), new Vector2f(Player.PLAYER_SIZE, Player.PLAYER_SIZE));
 
@@ -145,12 +148,7 @@ public class Monster {
                     (collisionVector == null ||
                             playerIntersectVector.sub(lineStart).length() < collisionVector.sub(lineStart).length())) {
                 System.out.println("Hit player");
-            }
-
-            if (collisionVector == null) {
-                System.out.println("Missed");
-            } else {
-                System.out.println("Hit");
+                Game.getLevel().damagePlayer(rand.nextInt(DAMAGE_MAX - DAMAGE_MIN) + DAMAGE_MIN);
             }
 
             state = STATE_CHASE;
@@ -216,5 +214,13 @@ public class Monster {
         shader.updateUniforms(transform.getTransformation(), transform.getProjectedTransformation(), material);
         mesh.draw();
         shader.unbind();
+    }
+
+    public Vector2f getSize(){
+        return new Vector2f(MONSTER_WIDTH, MONSTER_LENGTH);
+    }
+
+    public Transform getTransform(){
+        return transform;
     }
 }

@@ -24,8 +24,7 @@ public class Level {
     private ArrayList<Door> doors;
     private ArrayList<Vector2f> collisionPosStart;
     private ArrayList<Vector2f> collisionPosEnd;
-
-    private Monster monster;
+    private ArrayList<Monster> monsters;
 
 
     public Level(String levelName, String textureName, Player player){
@@ -33,19 +32,9 @@ public class Level {
         level = new Bitmap(levelName).flipY();
         material = new Material(new Texture(textureName));
         transform = new Transform();
-
         shader = BasicShader.getInstance();
-        //door = new Door(tempTrans, material);
-        doors = new ArrayList<Door>();
 
-        collisionPosStart = new ArrayList<Vector2f>();
-        collisionPosEnd = new ArrayList<Vector2f>();
-        Transform tempTrans = new Transform();
-        tempTrans.setTranslation(new Vector3f(10,0,7));
-        monster = new Monster(tempTrans);
         generateLevel();
-
-
     }
 
     public void openDoors(Vector3f position){
@@ -57,10 +46,6 @@ public class Level {
     }
 
     public void input(){
-        if(Input.getKey(GLFW_KEY_E)){
-          openDoors(player.getCamera().getPos());
-          monster.damage(50);
-        }
         player.input();
     }
 
@@ -68,8 +53,8 @@ public class Level {
         player.update();
         for(Door door : doors)
             door.update();
-
-        monster.update();
+        for(Monster monster : monsters)
+            monster.update();
     }
 
     public void render(){
@@ -80,11 +65,11 @@ public class Level {
         shader.unbind();
         for(Door door : doors)
             door.render();
-
-        monster.render();
+        for(Monster monster : monsters)
+            monster.render();
     }
 
-    public Vector2f checkIntersections(Vector2f lineStart, Vector2f lineEnd){
+    public Vector2f checkIntersections(Vector2f lineStart, Vector2f lineEnd, boolean hurtMonsters){
         Vector2f nearestIntersection = null;
 
         for (int i = 0; i < collisionPosStart.size(); i++){
@@ -98,7 +83,33 @@ public class Level {
             Vector2f collisionVector = lineIntersectRect(lineStart, lineEnd,door.getTransform().getTranslation().getXZ(), door.getDoorSize());
 
             nearestIntersection = findNearestVector2f(nearestIntersection, collisionVector, lineStart);
+        }
 
+        if(hurtMonsters){
+            Vector2f nearestMonsterIntersect = null;
+            Monster nearestMonster = null;
+
+            for(Monster monster : monsters){
+                Vector2f monsterSize = monster.getSize();
+                Vector2f monsterPos = monster.getTransform().getTranslation().getXZ();
+                Vector2f collisionVector = lineIntersectRect(lineStart, lineEnd, monsterPos, monsterSize);
+
+                nearestMonsterIntersect = findNearestVector2f(nearestMonsterIntersect, collisionVector, lineStart);
+
+                if(nearestMonsterIntersect == collisionVector){
+                    System.out.println("Hit monster");
+
+                    nearestMonster = monster;
+                }
+            }
+            if(nearestMonsterIntersect != null &&
+                    (nearestIntersection == null ||
+                            nearestMonsterIntersect.sub(lineStart).length() < nearestIntersection.sub(lineStart).length())){
+                if(nearestMonster != null){
+                    System.out.println("Hit monster");
+                    nearestMonster.damage(player.getDamage());
+                }
+            }
         }
 
         return nearestIntersection;
@@ -300,6 +311,18 @@ public class Level {
     }
 
     private void generateLevel(){
+        monsters = new ArrayList<Monster>();
+
+        Transform tempTrans = new Transform();
+        tempTrans.setTranslation(new Vector3f(10,0,7));
+        monsters.add(new Monster(tempTrans));
+
+        //door = new Door(tempTrans, material);
+        doors = new ArrayList<Door>();
+
+        collisionPosStart = new ArrayList<Vector2f>();
+        collisionPosEnd = new ArrayList<Vector2f>();
+
         ArrayList<Vertex> vertices = new ArrayList<Vertex>();
         ArrayList<Integer> indices = new ArrayList<Integer>();
 
@@ -370,5 +393,9 @@ public class Level {
 
     public Shader getShader(){
         return shader;
+    }
+
+    public void damagePlayer(int amount){
+        player.damage(amount);
     }
 }
