@@ -58,7 +58,6 @@ public class Level {
     }
 
     public void render(){
-        player.render();
         shader.bind();
         shader.updateUniforms(transform.getTransformation(), transform.getProjectedTransformation(), material);
         mesh.draw();
@@ -67,6 +66,7 @@ public class Level {
             door.render();
         for(Monster monster : monsters)
             monster.render();
+        player.render();
     }
 
     public Vector2f checkIntersections(Vector2f lineStart, Vector2f lineEnd, boolean hurtMonsters){
@@ -76,6 +76,8 @@ public class Level {
             Vector2f collisionVector = lineIntersect(lineStart, lineEnd, collisionPosStart.get(i), collisionPosEnd.get(i));
 
             nearestIntersection = findNearestVector2f(nearestIntersection, collisionVector, lineStart);
+            if(collisionVector != null)
+                System.out.println(collisionVector.toString());
 
         }
 
@@ -94,17 +96,21 @@ public class Level {
                 Vector2f monsterPos = monster.getTransform().getTranslation().getXZ();
                 Vector2f collisionVector = lineIntersectRect(lineStart, lineEnd, monsterPos, monsterSize);
 
+                //System.out.println(collisionVector.toString());
+
                 nearestMonsterIntersect = findNearestVector2f(nearestMonsterIntersect, collisionVector, lineStart);
 
                 if(nearestMonsterIntersect == collisionVector){
-                    System.out.println("Hit monster");
-
                     nearestMonster = monster;
                 }
             }
-            if(nearestMonsterIntersect != null &&
-                    (nearestIntersection == null ||
-                            nearestMonsterIntersect.sub(lineStart).length() < nearestIntersection.sub(lineStart).length())){
+            if(nearestMonster != null){
+                System.out.println("Hit monster");
+                nearestMonster.damage(player.getDamage());
+            }
+            //System.out.println( nearestMonster   );
+            if(nearestMonsterIntersect != null && (nearestIntersection == null ||
+                    nearestMonsterIntersect.sub(lineStart).length() < nearestIntersection.sub(lineStart).length())){
                 if(nearestMonster != null){
                     System.out.println("Hit monster");
                     nearestMonster.damage(player.getDamage());
@@ -119,7 +125,8 @@ public class Level {
         return a.getX() * b.getY() - a.getY() * b.getX();
     }
 
-    private Vector2f lineIntersect(Vector2f lineStart1, Vector2f lineEnd1, Vector2f lineStart2, Vector2f lineEnd2){
+    private Vector2f lineIntersect(Vector2f lineStart1, Vector2f lineEnd1, Vector2f lineStart2, Vector2f lineEnd2)
+    {
         Vector2f line1 = lineEnd1.sub(lineStart1);
         Vector2f line2 = lineEnd2.sub(lineStart2);
 
@@ -128,10 +135,10 @@ public class Level {
         if(cross == 0)
             return null;
 
-        Vector2f lineStartDistance = lineStart2.sub(lineStart1);
+        Vector2f distanceBetweenLineStarts = lineStart2.sub(lineStart1);
 
-        float a = Vector2fCross(lineStartDistance, line2)/cross;
-        float b = Vector2fCross(lineStartDistance, line1)/cross;
+        float a = Vector2fCross(distanceBetweenLineStarts, line2) / cross;
+        float b = Vector2fCross(distanceBetweenLineStarts, line1) / cross;
 
         if(0.0f < a && a < 1.0f && 0.0f < b && b < 1.0f)
             return lineStart1.add(line1.mul(a));
@@ -139,15 +146,15 @@ public class Level {
         return null;
     }
 
-    private Vector2f findNearestVector2f(Vector2f a, Vector2f b, Vector2f posRelative){
+    private Vector2f findNearestVector2f(Vector2f a, Vector2f b, Vector2f positionRelativeTo) {
         if(b != null && (a == null ||
-                a.sub(posRelative).length() > b.sub(posRelative).length())){
+                a.sub(positionRelativeTo).length() > b.sub(positionRelativeTo).length()))
             return b;
-        }
+
         return a;
     }
 
-    public Vector2f lineIntersectRect(Vector2f lineStart, Vector2f lineEnd, Vector2f rectPos, Vector2f rectSize){
+    public Vector2f lineIntersectRect(Vector2f lineStart, Vector2f lineEnd, Vector2f rectPos, Vector2f rectSize) {
         Vector2f result = null;
 
         Vector2f collisionVector = lineIntersect(lineStart, lineEnd, rectPos, new Vector2f(rectPos.getX() + rectSize.getX(), rectPos.getY()));
@@ -156,10 +163,10 @@ public class Level {
         collisionVector = lineIntersect(lineStart, lineEnd, rectPos, new Vector2f(rectPos.getX(), rectPos.getY() + rectSize.getY()));
         result = findNearestVector2f(result, collisionVector, lineStart);
 
-        collisionVector = lineIntersect(lineStart, lineEnd, new Vector2f(rectPos.getX(), rectPos.getY() + rectSize.getY()), new Vector2f(rectPos.getX() + rectSize.getX(), rectPos.getY() + rectSize.getY()));
+        collisionVector = lineIntersect(lineStart, lineEnd, new Vector2f(rectPos.getX(), rectPos.getY() + rectSize.getY()), rectPos.add(rectSize));
         result = findNearestVector2f(result, collisionVector, lineStart);
 
-        collisionVector = lineIntersect(lineStart, lineEnd, new Vector2f(rectPos.getX() + rectSize.getX(), rectPos.getY()), new Vector2f(rectPos.getX() + rectSize.getX(), rectPos.getY() + rectSize.getY()));
+        collisionVector = lineIntersect(lineStart, lineEnd, new Vector2f(rectPos.getX() + rectSize.getX(), rectPos.getY()), rectPos.add(rectSize));
         result = findNearestVector2f(result, collisionVector, lineStart);
 
         return result;
@@ -169,27 +176,29 @@ public class Level {
         Vector2f collisionVector = new Vector2f(1,1);
         Vector3f movementVector = newPos.sub(oldPos);
 
-        if (movementVector.length() > 0) {
+        if(movementVector.length() > 0)
+        {
             Vector2f blockSize = new Vector2f(SPOT_WIDTH, SPOT_LENGTH);
             Vector2f objectSize = new Vector2f(objectWidth, objectLength);
 
-            Vector2f oldPos2 = oldPos.getXZ();
-            Vector2f newPos2 = newPos.getXZ();
+            Vector2f oldPos2 = new Vector2f(oldPos.getX(), oldPos.getZ());
+            Vector2f newPos2 = new Vector2f(newPos.getX(), newPos.getZ());
 
-            for (int i = 0; i < level.getWidth(); i++) {
-                for (int j = 0; j < level.getHeight(); j++) {
-                    if ((level.getPixel(i, j) & 0xFFFFFF) == 0) {
-                        collisionVector = collisionVector.mul(rectCollide(oldPos2, newPos2, objectSize, blockSize.mul(new Vector2f(i, j)), blockSize));
-                    }
-                }
-            }
-            Vector2f doorSize;
-            for (Door door : doors) {
-                doorSize = door.getDoorSize();
-                collisionVector = collisionVector.mul(rectCollide(oldPos2, newPos2, objectSize, door.getTransform().getTranslation().getXZ(), doorSize));
+            for(int i = 0; i < level.getWidth(); i++)
+                for(int j = 0; j < level.getHeight(); j++)
+                    if((level.getPixel(i,j) & 0xFFFFFF) == 0)
+                        collisionVector = collisionVector.mul(rectCollide(oldPos2, newPos2, objectSize, blockSize.mul(new Vector2f(i,j)), blockSize));
 
+
+            for(Door door : doors)
+            {
+                Vector2f doorSize = door.getDoorSize();
+                Vector3f doorPos3f = door.getTransform().getTranslation();
+                Vector2f doorPos2f = new Vector2f(doorPos3f.getX(), doorPos3f.getZ());
+                collisionVector = collisionVector.mul(rectCollide(oldPos2, newPos2, objectSize, doorPos2f, doorSize));
             }
         }
+
         return new Vector3f(collisionVector.getX(), 0, collisionVector.getY());
     }
 
@@ -200,17 +209,13 @@ public class Level {
                 newPos.getX() - size1.getX() > pos2.getX() + size2.getX() * size2.getX() ||
                 oldPos.getY() + size1.getY() < pos2.getY() ||
                 oldPos.getY() - size1.getY() > pos2.getY() + size2.getY() * size2.getY())
-        {
             result.setX(1);
-        }
 
         if(oldPos.getX() + size1.getX() < pos2.getX() ||
                 oldPos.getX() - size1.getX() > pos2.getX() + size2.getX() * size2.getX() ||
                 newPos.getY() + size1.getY() < pos2.getY() ||
                 newPos.getY() - size1.getY() > pos2.getY() + size2.getY() * size2.getY())
-        {
             result.setY(1);
-        }
 
         return result;
     }

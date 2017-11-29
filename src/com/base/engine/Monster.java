@@ -1,5 +1,6 @@
 package com.base.engine;
 
+import java.util.ArrayList;
 import java.util.Random;
 
 public class Monster {
@@ -30,8 +31,13 @@ public class Monster {
     public static final int MAX_HEALTH = 100;
     public static final int DAMAGE_MIN = 5;
     public static final int DAMAGE_MAX = 25;
+    public static final double HIT_STUN_DURATION = 0.23;
 
-    private Mesh mesh;
+    private double deathTime;
+
+    private static ArrayList<Texture> animations;
+    private static Mesh mesh;
+
     private Material material;
     private Transform transform;
     private Random rand;
@@ -39,18 +45,33 @@ public class Monster {
     private boolean canLook;
     private boolean canAttack;
     private int health;
+    private boolean hitStun;
+    private double hitStunStart;
 
     public Monster(Transform transform){
-        this.transform = transform;
-        this.state = STATE_IDLE;
-        this.canLook = false;
-        this.canAttack = false;
-        this.health = MAX_HEALTH;
-        this.rand = new Random();
-        material = new Material(new Texture("SSWVA1.png"));
+        if(animations == null){
+            animations = new ArrayList<Texture>();
+
+            animations.add(new Texture("SSWVA1.png"));
+            animations.add(new Texture("SSWVB1.png"));
+            animations.add(new Texture("SSWVC1.png"));
+            animations.add(new Texture("SSWVD1.png"));
+
+            animations.add(new Texture("SSWVE0.png"));
+            animations.add(new Texture("SSWVF0.png"));
+            animations.add(new Texture("SSWVG0.png"));
+
+            animations.add(new Texture("SSWVH0.png"));
+
+            animations.add(new Texture("SSWVI0.png"));
+            animations.add(new Texture("SSWVJ0.png"));
+            animations.add(new Texture("SSWVK0.png"));
+            animations.add(new Texture("SSWVL0.png"));
+
+            animations.add(new Texture("SSWVM0.png"));
+        }
 
         if(mesh == null){
-            // TODO: Add top/bottom face if you set height less than level height
             Vertex[] vertices = new Vertex[]{
                     new Vertex(new Vector3f(-SIZEX,START,START), new Vector2f(TEX_MAX_X,TEX_MAX_Y)),
                     new Vertex(new Vector3f(-SIZEX,SIZEY,START), new Vector2f(TEX_MAX_X,TEX_MIN_Y)),
@@ -63,17 +84,29 @@ public class Monster {
 
             mesh = new Mesh(vertices, indices);
         }
+
+        this.transform = transform;
+        this.state = STATE_IDLE;
+        this.canLook = false;
+        this.canAttack = false;
+        this.health = MAX_HEALTH;
+        this.rand = new Random();
+        this.material = new Material(animations.get(0));
+        this.deathTime = 0;
+        this.hitStun = false;
+        this.hitStunStart = 0;
     }
 
     public void damage(int amount){
-        if(state == STATE_IDLE){
-            state = STATE_CHASE;
-        }
-
+        hitStunStart = 0;
         health -= amount;
 
         if(health <= 0){
             state = STATE_DYING;
+        }
+        else {
+            this.hitStun = true;
+            material.setTexture(animations.get(7));
         }
     }
 
@@ -83,29 +116,50 @@ public class Monster {
 
         if(timeDecimals < 0.5){
             canLook = true;
+            material.setTexture(animations.get(0));
         }
-        else if(canLook){
-            Vector2f lineStart = transform.getTranslation().getXZ();
-            Vector2f castDirection = orientation.getXZ();
-            Vector2f lineEnd = lineStart.add(castDirection.mul(SHOOT_DISTANCE));
+        else{
+            material.setTexture(animations.get(1));
+            if(canLook){
 
-            Vector2f collisionVector = Game.getLevel().checkIntersections(lineStart, lineEnd, false);
+                Vector2f lineStart = transform.getTranslation().getXZ();
+                Vector2f castDirection = orientation.getXZ();
+                Vector2f lineEnd = lineStart.add(castDirection.mul(SHOOT_DISTANCE));
 
-            Vector2f playerIntersectVector = Game.getLevel().lineIntersectRect(lineStart, lineEnd, Transform.getCamera().getPos().getXZ(), new Vector2f(Player.PLAYER_SIZE, Player.PLAYER_SIZE));
+                Vector2f collisionVector = Game.getLevel().checkIntersections(lineStart, lineEnd, false);
 
-            if(playerIntersectVector != null &&
-                    (collisionVector == null ||
-                            playerIntersectVector.sub(lineStart).length() < collisionVector.sub(lineStart).length())){
-                System.out.println("Seen player");
-                state = STATE_CHASE;
+                Vector2f playerIntersectVector = Game.getLevel().lineIntersectRect(lineStart, lineEnd, Transform.getCamera().getPos().getXZ(), new Vector2f(Player.PLAYER_SIZE, Player.PLAYER_SIZE));
+
+                if(playerIntersectVector != null &&
+                        (collisionVector == null ||
+                                playerIntersectVector.sub(lineStart).length() < collisionVector.sub(lineStart).length())){
+                    System.out.println("Seen player");
+                    state = STATE_CHASE;
+                }
+
+                canLook = false;
             }
-
-            canLook = false;
         }
 
     }
 
     private void chaseUpdate(Vector3f orientation, float distance){
+        double time = Time.getTime()/(double)Time.SECOND;
+        double timeDecimals = time - (double)((int)time);
+
+        if(timeDecimals < 0.25){
+            material.setTexture(animations.get(0));
+        }
+        else if(timeDecimals < 0.5){
+            material.setTexture(animations.get(1));
+        }
+        else if(timeDecimals < 0.75){
+            material.setTexture(animations.get(2));
+        }
+        else {
+            material.setTexture(animations.get(3));
+        }
+
         if(rand.nextDouble() < ATTACK_CHANCE * Time.getDelta()){
             state = STATE_ATTACK;
         }
@@ -132,37 +186,65 @@ public class Monster {
         double time = Time.getTime()/(double)Time.SECOND;
         double timeDecimals = time - (double)((int)time);
 
-        if(timeDecimals < 0.3){
-            canAttack = true;
+        if(timeDecimals < 0.25){
+            material.setTexture(animations.get(4));
         }
-        else if (canAttack) {
-            Vector2f lineStart = transform.getTranslation().getXZ();
-            Vector2f castDirection = orientation.getXZ().rotate((rand.nextFloat() - 0.5f) * SHOT_ANGLE);
-            Vector2f lineEnd = lineStart.add(castDirection.mul(SHOOT_DISTANCE));
+        else if(timeDecimals < 0.5){
+            material.setTexture(animations.get(5));
+        }
+        else if(timeDecimals < 0.75){
+            material.setTexture(animations.get(6));
+            if (canAttack) {
+                Vector2f lineStart = transform.getTranslation().getXZ();
+                Vector2f castDirection = orientation.getXZ().rotate((rand.nextFloat() - 0.5f) * SHOT_ANGLE);
+                Vector2f lineEnd = lineStart.add(castDirection.mul(SHOOT_DISTANCE));
 
-            Vector2f collisionVector = Game.getLevel().checkIntersections(lineStart, lineEnd, false);
+                Vector2f collisionVector = Game.getLevel().checkIntersections(lineStart, lineEnd, false);
 
-            Vector2f playerIntersectVector = Game.getLevel().lineIntersectRect(lineStart, lineEnd, Transform.getCamera().getPos().getXZ(), new Vector2f(Player.PLAYER_SIZE, Player.PLAYER_SIZE));
+                Vector2f playerIntersectVector = Game.getLevel().lineIntersectRect(lineStart, lineEnd, Transform.getCamera().getPos().getXZ(), new Vector2f(Player.PLAYER_SIZE, Player.PLAYER_SIZE));
 
-            if (playerIntersectVector != null &&
-                    (collisionVector == null ||
-                            playerIntersectVector.sub(lineStart).length() < collisionVector.sub(lineStart).length())) {
-                System.out.println("Hit player");
-                Game.getLevel().damagePlayer(rand.nextInt(DAMAGE_MAX - DAMAGE_MIN) + DAMAGE_MIN);
+                if (playerIntersectVector != null &&
+                        (collisionVector == null ||
+                                playerIntersectVector.sub(lineStart).length() < collisionVector.sub(lineStart).length())) {
+                    System.out.println("Hit player");
+                    Game.getLevel().damagePlayer(rand.nextInt(DAMAGE_MAX - DAMAGE_MIN) + DAMAGE_MIN);
+                }
+
+                state = STATE_CHASE;
+                canAttack = false;
             }
-
-            state = STATE_CHASE;
-            canAttack = false;
+        } else {
+            canAttack = true;
+            material.setTexture(animations.get(5));
         }
     }
 
     private void dyingUpdate(Vector3f orientation, float distance){
-        state = STATE_DEAD;
+        deathTime += Time.getDelta();
+
+        if(deathTime < 0.1f){
+            material.setTexture(animations.get(8));
+            transform.setScale(1,0.96428571428571428571428571428571f,1);
+        }
+        else if(deathTime < 0.3f){
+            material.setTexture(animations.get(9));
+            transform.setScale(1.7f,0.9f,1);
+        }
+        else if(deathTime < 0.45f){
+            material.setTexture(animations.get(10));
+            transform.setScale(1.7f,0.9f,1);
+        }
+        else if(deathTime < 0.6f){
+            material.setTexture(animations.get(11));
+            transform.setScale(1.7f,0.5f,1);
+        } else {
+            state = STATE_DEAD;
+        }
     }
 
     private void deadUpdate(Vector3f orientation, float distance){
-        System.out.println("DEAD");
-        // Eventually dead sprite
+        material.setTexture(animations.get(12));
+        transform.setScale(1.75862068965517241379310f, 0.285714285714285714f, 1f);
     }
 
     private void alignWithGround(){
@@ -185,24 +267,34 @@ public class Monster {
         Vector3f orientation = directionToCam.div(distance);
 
         billboard(orientation);
-
-        switch (state){
-            case STATE_IDLE:
-                idleUpdate(orientation, distance);
-                break;
-            case STATE_CHASE:
-                chaseUpdate(orientation, distance);
-                break;
-            case STATE_ATTACK:
-                attackUpdate(orientation, distance);
-                break;
-            case STATE_DYING:
-                dyingUpdate(orientation, distance);
-                break;
-            case STATE_DEAD:
-                deadUpdate(orientation, distance);
-                break;
+        if(!hitStun){
+            switch (state){
+                case STATE_IDLE:
+                    idleUpdate(orientation, distance);
+                    break;
+                case STATE_CHASE:
+                    chaseUpdate(orientation, distance);
+                    break;
+                case STATE_ATTACK:
+                    attackUpdate(orientation, distance);
+                    break;
+                case STATE_DYING:
+                    dyingUpdate(orientation, distance);
+                    break;
+                case STATE_DEAD:
+                    deadUpdate(orientation, distance);
+                    break;
+            }
+        } else {
+            hitStunStart += Time.getDelta();
+            if(hitStunStart > HIT_STUN_DURATION){
+                if(state == STATE_IDLE){
+                    state = STATE_CHASE;
+                }
+                hitStun = false;
+            }
         }
+
 
         alignWithGround();
     }

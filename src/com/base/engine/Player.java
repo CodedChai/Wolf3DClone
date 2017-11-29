@@ -6,6 +6,18 @@ import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_RIGHT;
 
 public class Player {
+    public static final float GUN_OFFSET = -0.0875f;
+    public static final float SCALE = 0.0625f;
+
+    public static final float SIZEY = SCALE;
+    public static final float SIZEX = (float)((double)SIZEY / (1.0379746835443037974683544303797 * 2.0));
+    public static final float START = 0;
+
+    public static final float TEX_MAX_X = 1;
+    public static final float TEX_MAX_Y = 1;
+    public static final float TEX_MIN_X = 0;
+    public static final float TEX_MIN_Y = 0;
+
     private static final float MOUSE_SENSITIVITY = 0.5f;
     private static final float MOVE_SPEED = 6f;
     private static final float LOOK_SPEED = 6f;
@@ -14,17 +26,46 @@ public class Player {
     public static final int DAMAGE_MIN = 20;
     public static final int DAMAGE_MAX = 60;
     public static final int MAX_HEALTH = 100;
+    public static final double ATTACK_DELAY = .7;
 
     private static final Vector3f zeroVector = new Vector3f(0,0,0);
     private Random rand;
     private int health;
     private Camera camera;
     private Vector3f movementVector = zeroVector;
+    private double lastAttackTime;
+    private boolean canAttack;
+    private static Mesh mesh;
+    private static Material gunMaterial;
+
+    private Transform gunTransform;
 
     public Player(Vector3f position){
+        if(mesh == null){
+            // TODO: Add top/bottom face if you set height less than level height
+            Vertex[] vertices = new Vertex[]{
+                    new Vertex(new Vector3f(-SIZEX,START,START), new Vector2f(TEX_MAX_X,TEX_MAX_Y)),
+                    new Vertex(new Vector3f(-SIZEX,SIZEY,START), new Vector2f(TEX_MAX_X,TEX_MIN_Y)),
+                    new Vertex(new Vector3f(SIZEX,SIZEY,START), new Vector2f(TEX_MIN_X,TEX_MIN_Y)),
+                    new Vertex(new Vector3f(SIZEX,START,START), new Vector2f(TEX_MIN_X,TEX_MAX_Y))
+            };
+
+            int[] indices = new int[]{0,1,2,
+                    0,2,3};
+
+            mesh = new Mesh(vertices, indices);
+        }
+
+        if(gunMaterial == null){
+            gunMaterial = new Material(new Texture("PISGB0.png"));
+        }
+        gunTransform = new Transform();
+        gunTransform.setTranslation(new Vector3f(10,0,7));
+
         rand = new Random();
         health = MAX_HEALTH;
         camera = new Camera(position, new Vector3f(0,0,1), new Vector3f(0,1,0));
+        canAttack = true;
     }
 
     public void damage(int amount){
@@ -83,7 +124,12 @@ public class Player {
             Game.getLevel().openDoors(camera.getPos());
         }
 
-        if(Input.getKeyPress(GLFW_KEY_SPACE)){
+        handleCanAttack();
+
+        if(Input.getKeyPress(GLFW_KEY_SPACE) && canAttack){
+            canAttack = false;
+            lastAttackTime = Time.getTime()/(double)Time.SECOND;
+
             Vector2f lineStart = camera.getPos().getXZ();
             Vector2f castDirection = camera.getForward().getXZ().normalize();
             Vector2f lineEnd = lineStart.add(castDirection.mul(SHOOT_DISTANCE));
@@ -92,7 +138,16 @@ public class Player {
         }
     }
 
+    private void handleCanAttack(){
+        double time = Time.getTime()/(double)Time.SECOND;
+
+        if((time - lastAttackTime) > ATTACK_DELAY){
+            canAttack = true;
+        }
+    }
+
     public void update(){
+        // Player movement
         float movAmount = (float)(MOVE_SPEED * Time.getDelta());
         movementVector.setY(0);
         if(movementVector.length() > 0){
@@ -104,11 +159,29 @@ public class Player {
         Vector3f collisionVector = Game.getLevel().checkCollision(oldPos, newPos, PLAYER_SIZE, PLAYER_SIZE);
         movementVector = movementVector.mul(collisionVector);
 
-        camera.move(movementVector, movAmount);
+        if(movementVector.length() > 0)
+            camera.move(movementVector, movAmount);
+
+        // Gun movement
+        gunTransform.setTranslation(camera.getPos().add(camera.getForward().normalize().mul(0.105f)));
+        gunTransform.getTranslation().setY(gunTransform.getTranslation().getY() + GUN_OFFSET);
+        Vector3f directionToCam = Transform.getCamera().getPos().sub(gunTransform.getTranslation());
+
+        float angleToFaceCamera = (float)Math.toDegrees(Math.atan(directionToCam.getZ()/directionToCam.getX()));
+
+        if(directionToCam.getX() < 0)
+            angleToFaceCamera += 180.0f;
+
+        gunTransform.getRotation().setY(angleToFaceCamera + 90.0f);
+
     }
 
     public void render(){
-
+        Shader shader = Game.getLevel().getShader();
+        shader.bind();
+        shader.updateUniforms(gunTransform.getTransformation(), gunTransform.getProjectedTransformation(), gunMaterial);
+        mesh.draw();
+        shader.unbind();
     }
 
     public Camera getCamera() {
